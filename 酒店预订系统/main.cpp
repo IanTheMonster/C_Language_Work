@@ -156,6 +156,177 @@ int compareDates(char *date1, char *date2)
     else
         return 0;
 }
+void saveRooms()
+{
+    FILE *file = fopen("rooms.txt", "w");
+    if (file == NULL)
+    {
+        printf("无法创建客房文件。\n");
+        return;
+    }
+
+    Room *current = roomsList;
+    while (current != NULL)
+    {
+        fprintf(file, "%d %f %f %s %d\n",
+                current->roomId, current->area, current->price,
+                current->roomType, current->isOccupied);
+        current = current->next;
+    }
+
+    fclose(file);
+}
+void loadRooms()
+{
+    FILE *file = fopen("rooms.txt", "r");
+    if (file == NULL)
+    {
+        printf("无法打开客房文件。\n");
+        return;
+    }
+
+    Room *current = NULL, *last = NULL;
+    while (!feof(file))
+    {
+        Room *newRoom = (Room *)malloc(sizeof(Room));
+        if (fscanf(file, "%d %f %f %s %d",
+                   &newRoom->roomId, &newRoom->area, &newRoom->price,
+                   newRoom->roomType, &newRoom->isOccupied) == 5)
+        {
+            newRoom->next = NULL;
+            if (last == NULL)
+            {
+                roomsList = newRoom;
+            }
+            else
+            {
+                last->next = newRoom;
+            }
+            last = newRoom;
+        }
+        else
+        {
+            free(newRoom);
+            break;
+        }
+    }
+
+    fclose(file);
+}
+void saveCustomers()
+{
+    FILE *file = fopen("customers.txt", "w");
+    if (file == NULL)
+    {
+        printf("无法创建客人文件。\n");
+        return;
+    }
+
+    Customer *current = customersList;
+    while (current != NULL)
+    {
+        fprintf(file, "%s %s %f\n",
+                current->ID, current->type, current->discount);
+        current = current->next;
+    }
+
+    fclose(file);
+}
+void loadCustomers()
+{
+    FILE *file = fopen("customers.txt", "r");
+    if (file == NULL)
+    {
+        printf("无法打开客人文件。\n");
+        return;
+    }
+
+    Customer *current = NULL, *last = NULL;
+    while (!feof(file))
+    {
+        Customer *newCustomer = (Customer *)malloc(sizeof(Customer));
+        if (fscanf(file, "%s %s %f",
+                   newCustomer->ID, newCustomer->type, &newCustomer->discount) == 3)
+        {
+            newCustomer->next = NULL;
+            if (last == NULL)
+            {
+                customersList = newCustomer;
+            }
+            else
+            {
+                last->next = newCustomer;
+            }
+            last = newCustomer;
+        }
+        else
+        {
+            free(newCustomer);
+            break;
+        }
+    }
+
+    fclose(file);
+}
+void saveReservations()
+{
+    FILE *file = fopen("reservations.txt", "w");
+    if (file == NULL)
+    {
+        printf("无法创建预订文件。\n");
+        return;
+    }
+
+    Reservation *current = reservationsList;
+    while (current != NULL)
+    {
+        fprintf(file, "%s %d %f %s %s %s %d\n",
+                current->CustomerId, current->roomId, current->price,
+                current->startDate, current->endDate,
+                current->roomType, current->isCheckedIn);
+        current = current->next;
+    }
+
+    fclose(file);
+}
+void loadReservations()
+{
+    FILE *file = fopen("reservations.txt", "r");
+    if (file == NULL)
+    {
+        printf("无法打开预订文件。\n");
+        return;
+    }
+
+    Reservation *current = NULL, *last = NULL;
+    while (!feof(file))
+    {
+        Reservation *newReservation = (Reservation *)malloc(sizeof(Reservation));
+        if (fscanf(file, "%s %d %f %s %s %s %d",
+                   newReservation->CustomerId, &newReservation->roomId, &newReservation->price,
+                   newReservation->startDate, newReservation->endDate,
+                   newReservation->roomType, &newReservation->isCheckedIn) == 7)
+        {
+            newReservation->next = NULL;
+            if (last == NULL)
+            {
+                reservationsList = newReservation;
+            }
+            else
+            {
+                last->next = newReservation;
+            }
+            last = newReservation;
+        }
+        else
+        {
+            free(newReservation);
+            break;
+        }
+    }
+
+    fclose(file);
+}
 
 // 从文件加载用户信息
 void loadUser()
@@ -594,13 +765,13 @@ void searchCustomerReservation()
 // 显示所有房间信息函数
 void displayAllRooms()
 {
-    printf("房间号\t\t面积\t\t价格\t\t房间类型\t是否空闲\n");
+    printf("房间号\t\t面积\t\t价格\t\t房间类型\n");
     printf("===============================================================\n");
 
     Room *currentRoom = roomsList;
     while (currentRoom != NULL)
     {
-        printf("%d\t\t%.2f\t\t%.2f\t\t%s\t\t%s\n", currentRoom->roomId, currentRoom->area, currentRoom->price, currentRoom->roomType, currentRoom->isOccupied ? "已占用" : "空闲");
+        printf("%d\t\t%.2f\t\t%.2f\t\t%s\n", currentRoom->roomId, currentRoom->area, currentRoom->price, currentRoom->roomType, currentRoom->isOccupied ? "已占用" : "空闲");
         currentRoom = currentRoom->next;
     }
 }
@@ -1517,8 +1688,14 @@ void frontDeskMenu()
 int main()
 {
     loadUser();
+    loadCustomers();
+    loadRooms();
+    loadReservations();
     menu();
     saveUser();
+    saveCustomers();
+    saveRooms();
+    saveReservations();
     return 0;
 }
 void customerQuery()
@@ -1615,6 +1792,8 @@ void customerSort()
     }
 
     roomsList = sorted; // 更新房间链表头指针
+    printf("排序已经完成!\n");
+    displayAllRooms();
 }
 // 统计函数，用于统计入住信息
 void customerStatistics()
